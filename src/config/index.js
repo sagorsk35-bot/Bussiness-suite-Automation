@@ -1,4 +1,9 @@
-require('dotenv').config();
+// Load dotenv only if .env file exists (local development)
+try {
+  require('dotenv').config();
+} catch (e) {
+  // In Vercel, env vars are set directly
+}
 
 module.exports = {
   // Server Configuration
