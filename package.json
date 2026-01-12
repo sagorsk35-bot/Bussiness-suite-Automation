@@ -1,0 +1,37 @@
+{
+  "name": "business-suite-ai-chatbot",
+  "version": "1.0.0",
+  "description": "AI-powered chatbot automation for Facebook Business Suite - ManyChat alternative",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "setup": "node scripts/setup.js"
+  },
+  "keywords": [
+    "facebook",
+    "messenger",
+    "chatbot",
+    "ai",
+    "automation",
+    "business-suite",
+    "manychat"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "@google/generative-ai": "^0.1.3",
+    "dotenv": "^16.3.1",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
