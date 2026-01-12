@@ -1,7 +1,15 @@
 {
-  "rewrites": [
-    { "source": "/webhook", "destination": "/api/webhook" },
-    { "source": "/health", "destination": "/api/health" },
-    { "source": "/", "destination": "/api/index" }
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/webhook", "dest": "/api/webhook.js" },
+    { "src": "/health", "dest": "/api/health.js" },
+    { "src": "/api/setup", "dest": "/api/setup.js" },
+    { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }
