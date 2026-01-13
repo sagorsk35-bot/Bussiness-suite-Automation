@@ -4,6 +4,8 @@ const aiService = require('../src/services/aiService');
 const conversationService = require('../src/services/conversationService');
 const flowEngine = require('../src/flows/flowEngine');
 const defaultFlows = require('../src/flows/defaultFlows');
+// 1. Import the Knowledge Service (Supabase connection)
+const knowledgeService = require('../src/services/knowledgeService');
 
 // Initialize flows
 let flowsInitialized = false;
@@ -49,6 +51,33 @@ async function handleTextMessage(senderId, message, userProfile) {
     );
     return;
   }
+
+  // --- 2. NEW TRAINING LOGIC START ---
+  if (text.startsWith('!learn ')) {
+    console.log(`Training command received from ${senderId}`);
+    
+    // Extract the fact (remove "!learn " from the start)
+    const newFact = text.replace('!learn ', '').trim();
+
+    if (newFact.length < 3) {
+      await facebookService.sendTextMessage(senderId, "❌ That fact is too short to learn.");
+      return;
+    }
+
+    // Save to Supabase
+    const saved = await knowledgeService.addFact(newFact);
+
+    // Reply to Admin
+    if (saved) {
+      await facebookService.sendTextMessage(senderId, `✅ I have learned this new fact:\n"${newFact}"`);
+    } else {
+      await facebookService.sendTextMessage(senderId, `❌ Failed to save to database. Please check Supabase connection.`);
+    }
+    
+    // STOP HERE: Do not send this to the AI or save to conversation history
+    return; 
+  }
+  // --- NEW TRAINING LOGIC END ---
 
   console.log(`Processing Message from ${senderId}: ${text}`);
 
@@ -187,7 +216,7 @@ module.exports = async (req, res) => {
       return res.status(404).send('Not Found');
     }
 
-    // --- CRITICAL FIX: DO NOT SEND 200 HERE ---
+    // --- CRITICAL: DO NOT SEND 200 HERE ---
     // We wait until the loop is finished
     
     try {
