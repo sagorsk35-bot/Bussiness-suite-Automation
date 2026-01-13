@@ -12,17 +12,21 @@ module.exports = {
 
   // Facebook/Meta Configuration
   facebook: {
-    pageAccessToken: process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
-    verifyToken: process.env.FACEBOOK_VERIFY_TOKEN || 'my_verify_token',
-    appSecret: process.env.FACEBOOK_APP_SECRET,
-    apiVersion: 'v18.0',
+    // We check both common names for these variables to be safe
+    pageAccessToken: process.env.PAGE_ACCESS_TOKEN || process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
+    verifyToken: process.env.VERIFY_TOKEN || process.env.FACEBOOK_VERIFY_TOKEN || 'my_verify_token',
+    appSecret: process.env.APP_SECRET || process.env.FACEBOOK_APP_SECRET,
+    // Update to latest API version
+    apiVersion: 'v21.0',
     graphApiUrl: 'https://graph.facebook.com'
   },
 
   // Google AI (Gemini) Configuration
   googleAI: {
-    apiKey: process.env.GOOGLE_AI_API_KEY,
-    model: 'gemini-pro',
+    apiKey: process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY,
+    // ⚠️ FIXED: 'gemini-pro' causes 404 errors now. 
+    // We use 'gemini-1.5-flash' which is faster, cheaper, and currently active.
+    model: 'gemini-1.5-flash',
     maxTokens: 1024,
     temperature: 0.7
   },
