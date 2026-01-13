@@ -50,10 +50,13 @@ async function handleTextMessage(senderId, message, userProfile) {
     return;
   }
 
-  console.log(`Message from ${senderId}: ${text}`);
+  console.log(`Processing Message from ${senderId}: ${text}`);
 
-  await facebookService.markSeen(senderId);
-  await facebookService.sendTypingIndicator(senderId);
+  // Run these in parallel to be faster
+  await Promise.all([
+    facebookService.markSeen(senderId),
+    facebookService.sendTypingIndicator(senderId)
+  ]);
 
   conversationService.addMessage(senderId, text, false);
 
@@ -151,7 +154,7 @@ async function sendErrorMessage(senderId) {
   }
 }
 
-// Vercel serverless handler
+// --- MAIN VERCEL HANDLER ---
 module.exports = async (req, res) => {
   initializeFlows();
 
@@ -176,26 +179,33 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     const body = req.body;
 
+    // Log the incoming data so we can see it in Vercel logs
+    console.log("--- INCOMING WEBHOOK ---");
+    console.log(JSON.stringify(body, null, 2));
+
     if (body.object !== 'page') {
       return res.status(404).send('Not Found');
     }
 
-    // Respond immediately
-    res.status(200).send('EVENT_RECEIVED');
-
-    // Process events
-    for (const entry of body.entry || []) {
-      const webhookEvent = entry.messaging?.[0];
-      if (webhookEvent) {
-        try {
+    // --- CRITICAL FIX: DO NOT SEND 200 HERE ---
+    // We wait until the loop is finished
+    
+    try {
+      // Process events
+      for (const entry of body.entry || []) {
+        const webhookEvent = entry.messaging?.[0];
+        if (webhookEvent) {
+          // await ensures the bot finishes talking before Vercel shuts down
           await handleMessage(webhookEvent);
-        } catch (error) {
-          console.error('Error processing event:', error);
         }
       }
+    } catch (error) {
+      console.error('Error processing event:', error);
     }
 
-    return;
+    // --- SEND 200 NOW ---
+    console.log("--- FINISHED PROCESSING, SENDING 200 ---");
+    return res.status(200).send('EVENT_RECEIVED');
   }
 
   return res.status(405).send('Method Not Allowed');
