@@ -42,31 +42,31 @@ class WebhookController {
       return;
     }
 
-    // Return 200 immediately to acknowledge receipt
-    res.status(200).send('EVENT_RECEIVED');
+    try {
+      // Process each entry
+      for (const entry of body.entry) {
+        // Get the messaging events
+        const webhookEvent = entry.messaging?.[0];
 
-    // Process each entry
-    for (const entry of body.entry) {
-      // Get the messaging events
-      const webhookEvent = entry.messaging?.[0];
+        if (!webhookEvent) {
+          logger.debug('No messaging event in entry');
+          continue;
+        }
 
-      if (!webhookEvent) {
-        logger.debug('No messaging event in entry');
-        continue;
-      }
+        logger.debug('Webhook event received:', {
+          sender: webhookEvent.sender?.id,
+          type: this.getEventType(webhookEvent)
+        });
 
-      logger.debug('Webhook event received:', {
-        sender: webhookEvent.sender?.id,
-        type: this.getEventType(webhookEvent)
-      });
-
-      // Handle the event asynchronously
-      try {
+        // Handle the event asynchronously and wait for it to finish
         await messageController.handleMessage(webhookEvent);
-      } catch (error) {
-        logger.error('Error processing webhook event:', error);
       }
+    } catch (error) {
+      logger.error('Error processing webhook event:', error);
     }
+
+    // Send 200 OK only after the work is done
+    res.status(200).send('EVENT_RECEIVED');
   }
 
   /**
