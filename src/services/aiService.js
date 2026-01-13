@@ -1,28 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const config = require('../config');
 const logger = require('../utils/logger');
+// 1. Import the Knowledge Service to read facts from Supabase
+const knowledgeService = require('./knowledgeService');
 
 class AIService {
   constructor() {
     this.genAI = new GoogleGenerativeAI(config.googleAI.apiKey);
     this.model = this.genAI.getGenerativeModel({ model: config.googleAI.model });
-
-    // System prompt for the AI assistant
-    this.systemPrompt = `You are ${config.bot.name}, a helpful and friendly AI assistant for a business.
-Your role is to:
-- Answer customer questions professionally and helpfully
-- Provide information about products and services
-- Help with common inquiries like business hours, pricing, and support
-- Guide users through processes step by step
-- Be conversational but concise - keep responses under 500 characters when possible
-- Use emojis sparingly to keep messages friendly
-- If you don't know something specific about the business, politely ask for clarification or suggest contacting support
-
-Important guidelines:
-- Always be polite and professional
-- Never share sensitive or personal information
-- If a customer seems upset, acknowledge their feelings and try to help
-- For complex issues, offer to connect them with a human agent`;
   }
 
   /**
@@ -33,8 +18,27 @@ Important guidelines:
    */
   async generateResponse(userMessage, conversationHistory = [], userProfile = null) {
     try {
+      // 2. FETCH DYNAMIC KNOWLEDGE FROM SUPABASE
+      // This gets the latest facts you taught the bot via "!learn"
+      const learnedFacts = await knowledgeService.getKnowledgeBase();
+
+      // 3. BUILD THE DYNAMIC SYSTEM PROMPT
+      // We reconstruct this every time so it includes the newest facts
+      const systemPrompt = `You are ${config.bot.name}, a helpful and friendly AI assistant for a business.
+
+HERE IS YOUR KNOWLEDGE BASE (Facts explicitly taught to you):
+${learnedFacts ? learnedFacts : "No specific business facts learned yet."}
+
+YOUR ROLE:
+- Answer customer questions using the KNOWLEDGE BASE above.
+- If the answer is found in the Knowledge Base, use it.
+- If the answer is NOT in the Knowledge Base, politely say you don't know or ask them to contact support. Do not make up prices or hours.
+- Be conversational but concise (under 500 characters).
+- Use emojis sparingly.
+- If a customer seems upset, acknowledge their feelings.`;
+
       // Build context from conversation history
-      let contextPrompt = this.systemPrompt + '\n\n';
+      let contextPrompt = systemPrompt + '\n\n';
 
       if (userProfile?.first_name) {
         contextPrompt += `The customer's name is ${userProfile.first_name}. `;
