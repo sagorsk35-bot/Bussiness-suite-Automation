@@ -2,64 +2,140 @@ const config = require('../src/config');
 const facebookService = require('../src/services/facebookService');
 const conversationService = require('../src/services/conversationService');
 
-// Simple keyword-based responses (No AI needed)
+// ============================================
+// RATROVA BUSINESS INFO
+// ============================================
+const businessInfo = {
+  name: 'Ratrova',
+  brand: 'Mother Brand Ratrova',
+  hours: 'Saturday to Thursday: 10:00 AM - 7:00 PM',
+  closedDays: 'Friday',
+
+  // Locations
+  hqAddress: `RATROVA HQ
+Al-Modina Tower
+2nd Floor, Flat-3E
+Sonr Bangla Project, Godabagh
+Keranigonj, Dhaka-1310`,
+
+  productionAddress: `Paperbox Production House
+House # 7, Zindabahar
+Road # 1, Nayabazar
+Dhaka-1100`,
+
+  // Products & Pricing
+  pizzaBoxPrices: `🍕 PIZZA BOX PRICES:
+
+📦 8 inches:
+   • 11 TK/pc (1000 pcs minimum)
+   • 14 TK/pc (500 pcs minimum)
+
+📦 10 inches:
+   • 14 TK/pc (1000 pcs minimum)
+   • 18 TK/pc (500 pcs minimum)
+
+📦 12 inches:
+   • 16 TK/pc (1000 pcs minimum)
+   • 20 TK/pc (500 pcs minimum)`,
+
+  burgerBoxPrices: `🍔 BURGER BOX PRICES:
+
+📦 Burger Box: 8 TK/pc (1000 pcs minimum)`,
+
+  allPrices: `📋 RATROVA PRICE LIST:
+
+🍕 PIZZA BOXES:
+• 8" - 11tk (1000pcs) | 14tk (500pcs)
+• 10" - 14tk (1000pcs) | 18tk (500pcs)
+• 12" - 16tk (1000pcs) | 20tk (500pcs)
+
+🍔 BURGER BOXES:
+• 8tk/pc (1000pcs minimum)
+
+💡 Bulk orders welcome!`
+};
+
+// ============================================
+// KEYWORD RESPONSES
+// ============================================
 const keywordResponses = {
   // Greetings
-  'hi': 'Hello! 👋 Welcome to our business. How can I help you today?',
-  'hello': 'Hi there! 👋 Thanks for reaching out. What can I do for you?',
-  'hey': 'Hey! 👋 Good to hear from you. How can I assist?',
-  'good morning': 'Good morning! ☀️ How can I help you today?',
-  'good afternoon': 'Good afternoon! How can I assist you?',
-  'good evening': 'Good evening! What can I do for you?',
+  'hi': `Hello! 👋 Welcome to ${businessInfo.name}!\n\nWe specialize in pizza boxes and burger boxes.\n\nHow can I help you today?`,
+  'hello': `Hi there! 👋 Welcome to ${businessInfo.name}!\n\nWhat can I do for you?`,
+  'hey': `Hey! 👋 Thanks for contacting ${businessInfo.name}. How can I assist?`,
+  'assalamualaikum': `Walaikum Assalam! 🙏 Welcome to ${businessInfo.name}. How can I help you?`,
+  'good morning': `Good morning! ☀️ Welcome to ${businessInfo.name}. How can I help you today?`,
+  'good afternoon': `Good afternoon! Welcome to ${businessInfo.name}. How can I assist you?`,
+  'good evening': `Good evening! Welcome to ${businessInfo.name}. What can I do for you?`,
 
-  // Common questions
-  'price': 'For pricing information, please let us know which product you\'re interested in, or type "products" to see our catalog.',
-  'cost': 'For pricing details, please specify which item you\'re asking about, or type "products" to browse.',
-  'how much': 'Please let me know which product you\'d like pricing for. Type "products" to see our options.',
+  // Pizza Box
+  'pizza': businessInfo.pizzaBoxPrices,
+  'pizza box': businessInfo.pizzaBoxPrices,
+
+  // Burger Box
+  'burger': businessInfo.burgerBoxPrices,
+  'burger box': businessInfo.burgerBoxPrices,
+
+  // General Prices
+  'price': businessInfo.allPrices,
+  'cost': businessInfo.allPrices,
+  'rate': businessInfo.allPrices,
+  'dam': businessInfo.allPrices,  // Bengali for price
+  'daam': businessInfo.allPrices,
+  'how much': businessInfo.allPrices,
+  'koto': businessInfo.allPrices, // Bengali
 
   // Products
-  'product': 'We have a variety of products! Please specify what you\'re looking for or type "menu" to see options.',
-  'catalog': 'Check out our products! What category interests you? Type "menu" for options.',
-  'order': 'To place an order, please tell us what you\'d like. We\'ll help you through the process!',
-  'buy': 'Great! What would you like to purchase? Let us know and we\'ll assist you.',
+  'product': `📦 ${businessInfo.name} Products:\n\n🍕 Pizza Boxes (8", 10", 12")\n🍔 Burger Boxes\n\nType "pizza" or "burger" for detailed pricing!`,
+  'box': `📦 We offer:\n\n🍕 Pizza Boxes - Multiple sizes\n🍔 Burger Boxes\n\nType "price" to see all rates!`,
+
+  // Orders
+  'order': `📝 To place an order:\n\n1. Tell us what you need (pizza box size/burger box)\n2. Quantity required\n3. Delivery location\n\nOur team will confirm and process your order!\n\n📞 Or call us for quick orders.`,
+  'buy': `Great! 🛒 What would you like to order?\n\n🍕 Pizza Boxes\n🍔 Burger Boxes\n\nJust tell us the size and quantity!`,
+
+  // Location
+  'location': `📍 ${businessInfo.name} Locations:\n\n🏢 HEAD OFFICE:\n${businessInfo.hqAddress}\n\n🏭 PRODUCTION:\n${businessInfo.productionAddress}`,
+  'address': `📍 ${businessInfo.name} Locations:\n\n🏢 HEAD OFFICE:\n${businessInfo.hqAddress}\n\n🏭 PRODUCTION:\n${businessInfo.productionAddress}`,
+  'office': `🏢 RATROVA HQ:\n${businessInfo.hqAddress}`,
+  'production': `🏭 Production House:\n${businessInfo.productionAddress}`,
+  'factory': `🏭 Production House:\n${businessInfo.productionAddress}`,
+  'thikana': `📍 ${businessInfo.name} Locations:\n\n🏢 HEAD OFFICE:\n${businessInfo.hqAddress}\n\n🏭 PRODUCTION:\n${businessInfo.productionAddress}`,
+
+  // Hours
+  'hour': `⏰ Business Hours:\n\n${businessInfo.hours}\n\n🚫 Closed: ${businessInfo.closedDays}`,
+  'time': `⏰ Business Hours:\n\n${businessInfo.hours}\n\n🚫 Closed: ${businessInfo.closedDays}`,
+  'open': `⏰ We're open:\n${businessInfo.hours}\n\n🚫 Closed: ${businessInfo.closedDays}`,
+  'close': `⏰ Business Hours:\n${businessInfo.hours}\n\n🚫 Closed: ${businessInfo.closedDays}`,
+  'somoy': `⏰ Business Hours:\n${businessInfo.hours}\n\n🚫 বন্ধ: ${businessInfo.closedDays}`,
 
   // Support
-  'help': 'I\'m here to help! 🙌 What do you need assistance with?',
-  'support': 'Our support team is ready to help! Please describe your issue.',
-  'problem': 'Sorry to hear you\'re having issues. Please tell me more so I can help.',
-  'issue': 'I\'d like to help resolve your issue. Can you provide more details?',
-
-  // Contact
-  'contact': '📞 You can reach us at:\n📧 Email: support@example.com\n📱 Phone: +1 (555) 123-4567',
-  'phone': '📱 Our phone number is: +1 (555) 123-4567',
-  'email': '📧 Our email is: support@example.com',
-  'location': '📍 We\'re located at: 123 Business Street, City',
-  'address': '📍 Our address is: 123 Business Street, City',
-  'hours': '⏰ Our business hours are: Mon-Fri 9AM-6PM',
+  'help': `I'm here to help! 🙌\n\nI can assist with:\n📦 Product info & pricing\n📍 Locations\n⏰ Business hours\n📝 Orders\n\nWhat do you need?`,
+  'support': `💬 How can we help?\n\nFor orders or inquiries, tell us:\n1. Product needed\n2. Quantity\n3. Any questions\n\nWe'll respond quickly!`,
 
   // Thanks & Bye
-  'thank': 'You\'re welcome! 😊 Is there anything else I can help with?',
-  'thanks': 'You\'re welcome! 😊 Let me know if you need anything else.',
-  'bye': 'Goodbye! 👋 Thanks for chatting. Feel free to message us anytime!',
-  'goodbye': 'Take care! 👋 We\'re here whenever you need us.',
+  'thank': `You're welcome! 😊\n\nAnything else you need from ${businessInfo.name}?`,
+  'thanks': `You're welcome! 😊\n\nFeel free to ask anything else!`,
+  'bye': `Goodbye! 👋\n\nThank you for choosing ${businessInfo.name}!\nContact us anytime for your packaging needs.`,
+  'goodbye': `Take care! 👋\n\nWe're here whenever you need quality boxes!`,
 
   // Menu
-  'menu': 'Here\'s what I can help with:\n📦 Products\n💬 Support\n📍 Contact\n❓ Help\n\nJust type what you need!',
-  'start': 'Welcome! 👋 I can help you with:\n📦 Products\n💬 Support\n📍 Contact\n\nWhat would you like to know?'
+  'menu': `📋 ${businessInfo.name} Menu:\n\n🍕 Pizza Boxes - Type "pizza"\n🍔 Burger Boxes - Type "burger"\n💰 All Prices - Type "price"\n📍 Location - Type "location"\n⏰ Hours - Type "hours"\n📝 Order - Type "order"`,
+  'start': `Welcome to ${businessInfo.name}! 👋\n\n${businessInfo.brand}\n\nWe provide quality packaging:\n🍕 Pizza Boxes\n🍔 Burger Boxes\n\nHow can I help you today?`
 };
 
 // Default quick replies
 const defaultQuickReplies = [
-  { title: '📦 Products', payload: 'PRODUCTS' },
-  { title: '💬 Support', payload: 'SUPPORT' },
-  { title: '📍 Contact', payload: 'CONTACT' },
-  { title: '📋 Menu', payload: 'MENU' }
+  { title: '🍕 Pizza Box', payload: 'PIZZA' },
+  { title: '🍔 Burger Box', payload: 'BURGER' },
+  { title: '💰 Prices', payload: 'PRICES' },
+  { title: '📍 Location', payload: 'LOCATION' }
 ];
 
 // Find matching response based on keywords
 function findResponse(text) {
   const lowerText = text.toLowerCase();
 
+  // Check for exact matches first, then partial
   for (const [keyword, response] of Object.entries(keywordResponses)) {
     if (lowerText.includes(keyword)) {
       return response;
@@ -91,7 +167,7 @@ async function handleTextMessage(senderId, message) {
   if (!text) {
     await facebookService.sendTextMessage(
       senderId,
-      "I received your message! Currently, I can only process text. How can I help you?"
+      "I received your message! Please send text so I can assist you."
     );
     return;
   }
@@ -120,14 +196,14 @@ async function handleTextMessage(senderId, message) {
     // Default response for unknown messages
     await facebookService.sendTextMessage(
       senderId,
-      `Thanks for your message! 📩\n\nI received: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"\n\nHow can I help you with this?`
+      `Thanks for your message! 📩\n\nI received: "${text.substring(0, 80)}${text.length > 80 ? '...' : ''}"\n\nOur team will review this. Meanwhile, you can:\n• Type "price" for rates\n• Type "order" to place order\n• Type "menu" for all options`
     );
   }
 
-  // Always send quick replies for easy navigation
+  // Send quick replies for easy navigation
   await facebookService.sendQuickReplies(
     senderId,
-    'What would you like to do next?',
+    'Quick options:',
     defaultQuickReplies
   );
 }
@@ -147,30 +223,39 @@ async function handlePayload(senderId, payload) {
 
   switch (payload) {
     case 'GET_STARTED':
-      response = 'Welcome! 👋 I\'m your business assistant. How can I help you today?';
+      response = `Welcome to ${businessInfo.name}! 👋\n\n${businessInfo.brand}\n\nWe provide premium quality:\n🍕 Pizza Boxes\n🍔 Burger Boxes\n\nHow can I help you today?`;
       break;
     case 'MENU':
     case 'MAIN_MENU':
-      response = '📋 Main Menu:\n\n📦 Products - Browse our catalog\n💬 Support - Get help\n📍 Contact - Reach us\n❓ Help - More options';
+      response = `📋 ${businessInfo.name} Menu:\n\n🍕 Pizza Boxes\n🍔 Burger Boxes\n💰 Prices\n📍 Locations\n⏰ Hours\n📝 Orders\n\nTap below or type what you need!`;
       break;
-    case 'PRODUCTS':
-      response = '📦 Products:\n\nWe offer various products and services. Please tell us what you\'re looking for, and we\'ll provide details and pricing!';
+    case 'PIZZA':
+      response = businessInfo.pizzaBoxPrices;
       break;
-    case 'SUPPORT':
-      response = '💬 Support:\n\nHow can we help you? Please describe your issue or question, and our team will assist you.';
+    case 'BURGER':
+      response = businessInfo.burgerBoxPrices;
       break;
-    case 'CONTACT':
-      response = '📍 Contact Us:\n\n📧 Email: support@example.com\n📱 Phone: +1 (555) 123-4567\n⏰ Hours: Mon-Fri 9AM-6PM';
+    case 'PRICES':
+      response = businessInfo.allPrices;
+      break;
+    case 'LOCATION':
+      response = `📍 ${businessInfo.name} Locations:\n\n🏢 HEAD OFFICE:\n${businessInfo.hqAddress}\n\n🏭 PRODUCTION:\n${businessInfo.productionAddress}`;
+      break;
+    case 'HOURS':
+      response = `⏰ Business Hours:\n\n${businessInfo.hours}\n\n🚫 Closed: ${businessInfo.closedDays}`;
+      break;
+    case 'ORDER':
+      response = `📝 To place an order:\n\n1. Product (Pizza box size / Burger box)\n2. Quantity\n3. Delivery address\n\nJust send us the details and we'll confirm your order!`;
       break;
     case 'HELP':
-      response = '❓ Help:\n\nI can assist you with:\n• Product information\n• Pricing & orders\n• Support requests\n• Contact details\n\nJust type what you need!';
+      response = `❓ I can help with:\n\n• Product pricing\n• Order placement\n• Location info\n• Business hours\n\nJust ask!`;
       break;
     case 'RESTART':
       conversationService.resetConversation(senderId);
-      response = 'Conversation restarted! 🔄 How can I help you?';
+      response = `Conversation restarted! 🔄\n\nWelcome back to ${businessInfo.name}. How can I help?`;
       break;
     default:
-      response = `You selected: ${payload}. How can I help you with this?`;
+      response = `Thanks! How can I help you with "${payload}"?\n\nType "menu" for all options.`;
   }
 
   await facebookService.sendTextMessage(senderId, response);
@@ -178,7 +263,7 @@ async function handlePayload(senderId, payload) {
   // Send quick replies
   await facebookService.sendQuickReplies(
     senderId,
-    'What else can I help with?',
+    'Quick options:',
     defaultQuickReplies
   );
 }
@@ -187,7 +272,7 @@ async function sendErrorMessage(senderId) {
   try {
     await facebookService.sendTextMessage(
       senderId,
-      "I'm sorry, something went wrong. Please try again or type 'menu' for options."
+      "Sorry, something went wrong. Please try again or type 'menu' for options."
     );
   } catch (error) {
     console.error('Error sending error message:', error);
@@ -205,13 +290,10 @@ module.exports = async (req, res) => {
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    console.log('Webhook verification:', { mode, tokenPresent: !!token });
-
     if (mode === 'subscribe' && token === config.facebook.verifyToken) {
       console.log('Webhook verified!');
       return res.status(200).send(challenge);
     } else {
-      console.log('Webhook verification failed');
       return res.status(403).send('Forbidden');
     }
   }
@@ -239,7 +321,7 @@ module.exports = async (req, res) => {
       }
     }
 
-    console.log('--- FINISHED PROCESSING ---');
+    console.log('--- FINISHED ---');
     return;
   }
 
