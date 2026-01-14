@@ -80,10 +80,10 @@ const keywordResponses = {
   'price': businessInfo.allPrices,
   'cost': businessInfo.allPrices,
   'rate': businessInfo.allPrices,
-  'dam': businessInfo.allPrices,  // Bengali for price
+  'dam': businessInfo.allPrices,
   'daam': businessInfo.allPrices,
   'how much': businessInfo.allPrices,
-  'koto': businessInfo.allPrices, // Bengali
+  'koto': businessInfo.allPrices,
 
   // Products
   'product': `📦 ${businessInfo.name} Products:\n\n🍕 Pizza Boxes (8", 10", 12")\n🍔 Burger Boxes\n\nType "pizza" or "burger" for detailed pricing!`,
@@ -134,14 +134,11 @@ const defaultQuickReplies = [
 // Find matching response based on keywords
 function findResponse(text) {
   const lowerText = text.toLowerCase();
-
-  // Check for exact matches first, then partial
   for (const [keyword, response] of Object.entries(keywordResponses)) {
     if (lowerText.includes(keyword)) {
       return response;
     }
   }
-
   return null;
 }
 
@@ -165,57 +162,42 @@ async function handleTextMessage(senderId, message) {
   const text = message.text;
 
   if (!text) {
-    await facebookService.sendTextMessage(
-      senderId,
-      "I received your message! Please send text so I can assist you."
-    );
+    await facebookService.sendTextMessage(senderId, "I received your message! Please send text so I can assist you.");
     return;
   }
 
-  console.log(`Message from ${senderId}: ${text}`);
+  console.log(`Processing Message from ${senderId}: ${text}`);
 
   await facebookService.markSeen(senderId);
   await facebookService.sendTypingIndicator(senderId);
 
-  // Store message
   conversationService.addMessage(senderId, text, false);
 
-  // Handle quick reply payload
   if (message.quick_reply?.payload) {
     await handlePayload(senderId, message.quick_reply.payload);
     return;
   }
 
-  // Find keyword-based response
   const response = findResponse(text);
 
   if (response) {
     await facebookService.sendTextMessage(senderId, response);
     conversationService.addMessage(senderId, response, true);
   } else {
-    // Default response for unknown messages
     await facebookService.sendTextMessage(
       senderId,
-      `Thanks for your message! 📩\n\nI received: "${text.substring(0, 80)}${text.length > 80 ? '...' : ''}"\n\nOur team will review this. Meanwhile, you can:\n• Type "price" for rates\n• Type "order" to place order\n• Type "menu" for all options`
+      `Thanks for your message! 📩\n\nI received: "${text.substring(0, 80)}${text.length > 80 ? '...' : ''}"\n\nOur team will review this. Meanwhile:\n• Type "price" for rates\n• Type "order" to place order\n• Type "menu" for all options`
     );
   }
 
-  // Send quick replies for easy navigation
-  await facebookService.sendQuickReplies(
-    senderId,
-    'Quick options:',
-    defaultQuickReplies
-  );
+  await facebookService.sendQuickReplies(senderId, 'Quick options:', defaultQuickReplies);
 }
 
 async function handlePostback(senderId, postback) {
-  const payload = postback.payload;
-  console.log(`Postback from ${senderId}: ${payload}`);
-
+  console.log(`Postback from ${senderId}: ${postback.payload}`);
   await facebookService.markSeen(senderId);
   await facebookService.sendTypingIndicator(senderId);
-
-  await handlePayload(senderId, payload);
+  await handlePayload(senderId, postback.payload);
 }
 
 async function handlePayload(senderId, payload) {
@@ -259,21 +241,12 @@ async function handlePayload(senderId, payload) {
   }
 
   await facebookService.sendTextMessage(senderId, response);
-
-  // Send quick replies
-  await facebookService.sendQuickReplies(
-    senderId,
-    'Quick options:',
-    defaultQuickReplies
-  );
+  await facebookService.sendQuickReplies(senderId, 'Quick options:', defaultQuickReplies);
 }
 
 async function sendErrorMessage(senderId) {
   try {
-    await facebookService.sendTextMessage(
-      senderId,
-      "Sorry, something went wrong. Please try again or type 'menu' for options."
-    );
+    await facebookService.sendTextMessage(senderId, "Sorry, something went wrong. Please try again or type 'menu' for options.");
   } catch (error) {
     console.error('Error sending error message:', error);
   }
@@ -282,9 +255,7 @@ async function sendErrorMessage(senderId) {
 // Vercel serverless handler
 module.exports = async (req, res) => {
   console.log('--- INCOMING WEBHOOK ---');
-  console.log(JSON.stringify(req.body, null, 2));
 
-  // GET - Webhook verification
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
@@ -298,31 +269,27 @@ module.exports = async (req, res) => {
     }
   }
 
-  // POST - Handle webhook events
   if (req.method === 'POST') {
     const body = req.body;
+    console.log(JSON.stringify(body, null, 2));
 
     if (body.object !== 'page') {
       return res.status(404).send('Not Found');
     }
 
-    // Respond immediately
-    res.status(200).send('EVENT_RECEIVED');
-
-    // Process events
-    for (const entry of body.entry || []) {
-      const webhookEvent = entry.messaging?.[0];
-      if (webhookEvent) {
-        try {
+    try {
+      for (const entry of body.entry || []) {
+        const webhookEvent = entry.messaging?.[0];
+        if (webhookEvent) {
           await handleMessage(webhookEvent);
-        } catch (error) {
-          console.error('Error processing event:', error);
         }
       }
+    } catch (error) {
+      console.error('Error processing event:', error);
     }
 
     console.log('--- FINISHED ---');
-    return;
+    return res.status(200).send('EVENT_RECEIVED');
   }
 
   return res.status(405).send('Method Not Allowed');

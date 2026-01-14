@@ -12,18 +12,18 @@ class WebhookController {
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    logger.info('Webhook verification request received', { mode, token: token ? 'present' : 'missing' });
+    console.log('Webhook verification request:', { mode, token_present: !!token });
 
     if (mode && token) {
       if (mode === 'subscribe' && token === config.facebook.verifyToken) {
-        logger.info('Webhook verified successfully!');
+        console.log('Webhook verified successfully!');
         res.status(200).send(challenge);
       } else {
-        logger.warn('Webhook verification failed - token mismatch');
+        console.error('Webhook verification failed - token mismatch');
         res.sendStatus(403);
       }
     } else {
-      logger.warn('Webhook verification failed - missing parameters');
+      console.error('Webhook verification failed - missing parameters');
       res.sendStatus(400);
     }
   }
@@ -35,38 +35,51 @@ class WebhookController {
   async handle(req, res) {
     const body = req.body;
 
+    // DEBUG: Print the raw incoming data to Vercel logs
+    console.log("--- INCOMING WEBHOOK DATA ---");
+    console.log(JSON.stringify(body, null, 2));
+
     // Check if this is a page event
     if (body.object !== 'page') {
-      logger.warn('Received non-page event:', body.object);
+      console.log('Received non-page event:', body.object);
       res.sendStatus(404);
       return;
     }
 
-    // Return 200 immediately to acknowledge receipt
-    res.status(200).send('EVENT_RECEIVED');
-
-    // Process each entry
-    for (const entry of body.entry) {
-      // Get the messaging events
-      const webhookEvent = entry.messaging?.[0];
-
-      if (!webhookEvent) {
-        logger.debug('No messaging event in entry');
-        continue;
+    try {
+      // Check if entry exists
+      if (!body.entry || body.entry.length === 0) {
+        console.log("No 'entry' found in webhook body.");
       }
 
-      logger.debug('Webhook event received:', {
-        sender: webhookEvent.sender?.id,
-        type: this.getEventType(webhookEvent)
-      });
+      // Process each entry
+      for (const entry of body.entry) {
+        
+        // Check if messaging array exists
+        if (!entry.messaging) {
+          // Sometimes Facebook sends 'standby' or 'changes' events, we skip those for now
+          console.log("Skipping entry (no 'messaging' array):", JSON.stringify(entry));
+          continue;
+        }
 
-      // Handle the event asynchronously
-      try {
+        const webhookEvent = entry.messaging[0];
+
+        console.log('Processing Event:', {
+          sender: webhookEvent.sender?.id,
+          type: this.getEventType(webhookEvent)
+        });
+
+        // Handle the event asynchronously and WAIT for it to finish
         await messageController.handleMessage(webhookEvent);
-      } catch (error) {
-        logger.error('Error processing webhook event:', error);
       }
+    } catch (error) {
+      // Log the full error to Vercel
+      console.error('CRITICAL ERROR processing webhook:', error);
     }
+
+    // Send 200 OK only after the work is done
+    console.log("--- FINISHED PROCESSING, SENDING 200 OK ---");
+    res.status(200).send('EVENT_RECEIVED');
   }
 
   /**
